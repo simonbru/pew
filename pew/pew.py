@@ -346,7 +346,7 @@ def parse_envname(argv, no_arg_callback):
         no_arg_callback()
 
     env = argv[0]
-    if env.startswith('/'):
+    if not is_subdir(workon_home, env):
         sys.exit("ERROR: Invalid environment name '{0}'.".format(env))
     if not (workon_home / env).exists():
         sys.exit("ERROR: Environment '{0}' does not exist. Create it with \
