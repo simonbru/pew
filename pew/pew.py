@@ -33,8 +33,11 @@ else:
         lambda : sys.exit('Command not supported on this platform')
 
 from pew import __version__
-from pew._utils import (check_call, invoke, expandpath, own, env_bin_dir,
-                        check_path, temp_environ, NamedTemporaryFile, to_unicode)
+from pew._utils import (
+    check_call, invoke, expandpath, own, env_bin_dir,
+    check_path, temp_environ, NamedTemporaryFile, to_unicode,
+    is_subdir,
+)
 from pew._print_utils import print_virtualenvs
 
 if sys.version_info[0] == 2:
@@ -208,6 +211,9 @@ def shell(env, cwd=None):
 def mkvirtualenv(envname, python=None, packages=[], project=None,
                  requirements=None, rest=[]):
 
+    if not is_subdir(workon_home, envname):
+        raise ValueError('Invalid environment name: "{0}".'.format(envname))
+
     if python:
         rest = ["--python=%s" % python] + rest
 
@@ -257,9 +263,12 @@ project directory to associate with the new environment.')
 
 def rmvirtualenvs(envs):
     error_happened = False
-    for env in envs:
-        env = workon_home / env
-        if os.environ.get('VIRTUAL_ENV') == str(env):
+    for envname in envs:
+        env = workon_home / envname
+        if not is_subdir(workon_home, envname):
+            err('ERROR: Invalid environment name: "{0}".'.format(env))
+            break
+        elif os.environ.get('VIRTUAL_ENV') == str(env):
             err("ERROR: You cannot remove the active environment (%s)." % env)
             error_happened = True
             break
@@ -270,7 +279,6 @@ def rmvirtualenvs(envs):
                 (env, e.strerror))
             error_happened = True
     return error_happened
-
 
 
 def rm_cmd(argv):
@@ -445,6 +453,7 @@ def cp_cmd(argv):
         shell(target_name)
 
 
+# TODO
 def copy_virtualenv_project(source, target):
     source = expandpath(source)
     if not source.exists():

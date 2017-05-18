@@ -87,3 +87,8 @@ def temp_environ():
     finally:
         os.environ.clear()
         os.environ.update(environ)
+
+
+def is_subdir(path, dirname):
+    subfolder_path = path / dirname
+    return path.resolve() == subfolder_path.resolve().parent
